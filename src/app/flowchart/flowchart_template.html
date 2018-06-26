@@ -1,0 +1,80 @@
+<svg class="draggable-container" xmlns="http://www.w3.org/2000/svg" (mousedown)="mouseDown($event)" (mousemove)="mouseMove($event)">
+    <defs>
+        <linearGradient spreadMethod="pad" y2="0" x2="0" y1="1" x1="0" id="nodeBackgroundGradient">
+            <stop offset="0" stop-opacity="0.99609" stop-color="#56aaff" />
+            <stop offset="0.63934" stop-opacity="0.99219" stop-color="#d0d0e5" />
+        </linearGradient>
+    </defs>
+    <g *ngFor="let node of chart.nodes" (mousedown)="nodeMouseDown($event, node)" attr.transform="translate({{node.x()}}, {{node.y()}})">
+        <rect [ngClass]="node.selected() && 'selected-node-rect' || (node == mouseOverNode && 'mouseover-node-rect' || 'node-rect')"
+            ry="10" rx="10" x="0" y="0" [attr.width]="node.width()" [attr.height]="node.height()" fill="url(#nodeBackgroundGradient)">
+
+        </rect>
+
+        <text [attr.x]="node.width()/2" y="25" text-anchor="middle" alignment-baseline="middle">
+            {{node.name()}}
+        </text>
+
+        <g *ngFor="let connector of node.inputConnectors; let $index = index" (mousedown)="connectorMouseDown($event, node, connector, $index, true)"
+            class="connector input-connector">
+            <text [attr.x]="connector.x() + 20" [attr.y]="connector.y()" text-anchor="left" alignment-baseline="middle">
+                {{connector.name()}}
+            </text>
+
+            <circle [ngClass]="connector == mouseOverConnector && 'mouseover-connector-circle' || 'connector-circle'" [attr.r]="connectorSize"
+                [attr.cx]="connector.x()" [attr.cy]="connector.y()" />
+        </g>
+
+        <g *ngFor="let connector of node.outputConnectors; let $index = index" (mousedown)="connectorMouseDown($event, node, connector, $index, false)"
+            class="connector output-connector">
+            <text [attr.x]="connector.x() - 20" [attr.y]="connector.y()" text-anchor="end" alignment-baseline="middle">
+                {{connector.name()}}
+            </text>
+
+            <circle [ngClass]="connector == mouseOverConnector && 'mouseover-connector-circle' || 'connector-circle'" [attr.r]="connectorSize"
+                [attr.cx]="connector.x()" [attr.cy]="connector.y()" />
+            
+        </g>
+    </g>
+
+    <g>
+        <g *ngFor="let connection of chart.connections" class="connection" (mousedown)="connectionMouseDown($event, connection)">
+            <path [ngClass]="connection.selected() && 'selected-connection-line' || (connection == mouseOverConnection && 'mouseover-connection-line' || 'connection-line')"
+                attr.d="M {{connection.sourceCoordX()}}, {{connection.sourceCoordY()}}
+                     C {{connection.sourceTangentX()}}, {{connection.sourceTangentY()}}
+                       {{connection.destTangentX()}}, {{connection.destTangentY()}}
+                       {{connection.destCoordX()}}, {{connection.destCoordY()}}">
+            </path>
+
+            <text [ngClass]="connection.selected() && 'selected-connection-name' || (connection == mouseOverConnection && 'mouseover-connection-name' || 'connection-name')"
+                [attr.x]="connection.middleX()" [attr.y]="connection.middleY()" text-anchor="middle" alignment-baseline="middle">{{connection.name()}}</text>
+
+            <circle [ngClass]="connection.selected() && 'selected-connection-endpoint' || (connection == mouseOverConnection && 'mouseover-connection-endpoint' || 'connection-endpoint')"
+                r="5" [attr.cx]="connection.sourceCoordX()" [attr.cy]="connection.sourceCoordY()">
+            </circle>
+
+            <circle [ngClass]="connection.selected() && 'selected-connection-endpoint' || (connection == mouseOverConnection && 'mouseover-connection-endpoint' || 'connection-endpoint')"
+                r="5" [attr.cx]="connection.destCoordX()" [attr.cy]="connection.destCoordY()">
+            </circle>
+        </g>
+    </g>
+
+    <g *ngIf="draggingConnection">
+        <path class="dragging-connection dragging-connection-line" attr.d="M {{dragPoint1.x}}, {{dragPoint1.y}}
+                 C {{dragTangent1.x}}, {{dragTangent1.y}}
+                   {{dragTangent2.x}}, {{dragTangent2.y}}
+                   {{dragPoint2.x}}, {{dragPoint2.y}}">
+        </path>
+
+        <circle class="dragging-connection dragging-connection-endpoint" r="4" [attr.cx]="dragPoint1.x" [attr.cy]="dragPoint1.y">
+        </circle>
+
+        <circle class="dragging-connection dragging-connection-endpoint" r="4" [attr.cx]="dragPoint2.x" [attr.cy]="dragPoint2.y">
+        </circle>
+    </g>
+
+    <rect *ngIf="dragSelecting" class="drag-selection-rect" [attr.x]="dragSelectionRect.x" [attr.y]="dragSelectionRect.y" [attr.width]="dragSelectionRect.width"
+        attr-height="dragSelectionRect.height">
+    </rect>
+
+</svg>
